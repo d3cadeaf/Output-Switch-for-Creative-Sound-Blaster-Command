@@ -1,7 +1,9 @@
 # Build output and local distribution package. These contain Creative's third-party interop assembly.
 **/bin/Release/
 Paket/
+dist/
 *Paket.zip
+*Windows-x86.zip
 Interop.CtSndCr.dll
 
 # Build and IDE output

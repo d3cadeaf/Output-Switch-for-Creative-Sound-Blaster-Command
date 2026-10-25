@@ -8,6 +8,7 @@
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AssemblyName>HeadphoneHotkey</AssemblyName>
     <RootNamespace>HeadphoneHotkey</RootNamespace>
+    <StartupObject>HeadphoneHotkey.Bootstrap</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -16,7 +17,7 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="Interop.CtSndCr">
       <HintPath>C:\Program Files (x86)\Creative\Sound Blaster Command\Platform\Interop.CtSndCr.dll</HintPath>
-      <Private>true</Private>
+      <Private>false</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>

@@ -11,8 +11,68 @@ using CTSoundCore;
 
 namespace HeadphoneHotkey
 {
+    internal static class Bootstrap
+    {
+        [STAThread]
+        private static void Main()
+        {
+            string interopPath = FindCreativeInteropAssembly();
+            if (interopPath == null)
+            {
+                System.Windows.Forms.MessageBox.Show(
+                    "Creative Sound Blaster Command could not be found. Install Sound Blaster Command and its device driver, then start this program again.",
+                    "Output Switch for Creative Sound Blaster Command",
+                    System.Windows.Forms.MessageBoxButtons.OK,
+                    System.Windows.Forms.MessageBoxIcon.Error);
+                return;
+            }
+
+            AppDomain.CurrentDomain.AssemblyResolve += delegate(object sender, ResolveEventArgs args)
+            {
+                if (!string.Equals(new System.Reflection.AssemblyName(args.Name).Name,
+                        "Interop.CtSndCr", StringComparison.OrdinalIgnoreCase))
+                    return null;
+                return System.Reflection.Assembly.LoadFrom(interopPath);
+            };
+
+            Program.Run();
+        }
+
+        private static string FindCreativeInteropAssembly()
+        {
+            string fileName = "Interop.CtSndCr.dll";
+            string[] roots = new string[]
+            {
+                AppDomain.CurrentDomain.BaseDirectory,
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86),
+                Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles)
+            };
+
+            foreach (string root in roots)
+            {
+                if (string.IsNullOrEmpty(root))
+                    continue;
+                string path = root;
+                if (!string.Equals(Path.GetFileName(root), "Program Files (x86)", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(Path.GetFileName(root), "Program Files", StringComparison.OrdinalIgnoreCase))
+                    path = Path.Combine(root, fileName);
+                else
+                    path = Path.Combine(root, "Creative", "Sound Blaster Command", "Platform", fileName);
+
+                if (File.Exists(path))
+                    return path;
+            }
+
+            return null;
+        }
+    }
+
     internal static class Program
     {
+        static Program()
+        {
+        }
+
         private const int HotkeyId = 1;
         private const int ExitHotkeyId = 2;
         private const uint ModAlt = 0x0001;
@@ -46,7 +106,7 @@ namespace HeadphoneHotkey
         private static bool _exitHotkeyRegistered;
 
         [STAThread]
-        private static void Main()
+        internal static void Run()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
