@@ -114,13 +114,13 @@ namespace HeadphoneHotkey
             InitializeTrayIcon();
             bool hotkeyRegistered = RegisterCurrentHotkey();
             if (!hotkeyRegistered)
-                ShowTrayMessage("Hotkey nicht verfügbar", FormatHotkey(_hotkeyModifiers, _hotkeyVirtualKey) +
-                    " ist bereits belegt. Ändere ihn im Tray-Menü.", ToolTipIcon.Warning);
+                ShowTrayMessage("Hotkey unavailable", FormatHotkey(_hotkeyModifiers, _hotkeyVirtualKey) +
+                    " is already in use. Change it from the tray menu.", ToolTipIcon.Warning);
 
             _exitHotkeyRegistered = RegisterHotKey(IntPtr.Zero, ExitHotkeyId,
                 ModControl | ModAlt | ModNoRepeat, VkF10);
-            Log("HeadphoneHotkey gestartet. Umschalten: " +
-                FormatHotkey(_hotkeyModifiers, _hotkeyVirtualKey) + "; Beenden: Strg+Alt+F10.");
+            Log("HeadphoneHotkey started. Toggle: " +
+                FormatHotkey(_hotkeyModifiers, _hotkeyVirtualKey) + "; Exit: Ctrl+Alt+F10.");
             try
             {
                 NativeMessage message;
@@ -160,18 +160,18 @@ namespace HeadphoneHotkey
         private static void InitializeTrayIcon()
         {
             ContextMenuStrip menu = new ContextMenuStrip();
-            _statusMenuItem = new ToolStripMenuItem("Status wird gelesen …") { Enabled = false };
+            _statusMenuItem = new ToolStripMenuItem("Reading status …") { Enabled = false };
             menu.Items.Add(_statusMenuItem);
             _hotkeyMenuItem = new ToolStripMenuItem("Hotkey: " + FormatHotkey(_hotkeyModifiers, _hotkeyVirtualKey))
                 { Enabled = false };
             menu.Items.Add(_hotkeyMenuItem);
             menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add("Auf Kopfhörer schalten", null, delegate { SetHeadphoneOutput(true, true, null); });
-            menu.Items.Add("Auf Lautsprecher schalten", null, delegate { SetHeadphoneOutput(false, true, null); });
-            menu.Items.Add("Ausgang umschalten", null, delegate { ToggleHeadphoneOutput(true); });
+            menu.Items.Add("Switch to Headphones", null, delegate { SetHeadphoneOutput(true, true, null); });
+            menu.Items.Add("Switch to Speakers", null, delegate { SetHeadphoneOutput(false, true, null); });
+            menu.Items.Add("Toggle Output", null, delegate { ToggleHeadphoneOutput(true); });
             menu.Items.Add(new ToolStripSeparator());
-            menu.Items.Add("Hotkey ändern …", null, ChangeHotkey);
-            menu.Items.Add("Programm beenden", null, delegate { PostQuitMessage(0); });
+            menu.Items.Add("Change Hotkey …", null, ChangeHotkey);
+            menu.Items.Add("Exit", null, delegate { PostQuitMessage(0); });
             menu.Opening += delegate { RefreshTrayStatus(); };
 
             _ownedTrayIcon = CreateTrayIcon(-1);
@@ -199,17 +199,17 @@ namespace HeadphoneHotkey
             {
                 uint selectedOutput = ReadSelectedOutput();
                 bool headphones = selectedOutput == 0;
-                _statusMenuItem.Text = headphones ? "Aktuell: Kopfhörer" : "Aktuell: Lautsprecher";
-                _trayIcon.Text = (headphones ? "Kopfhörer" : "Lautsprecher") + " – " +
+                _statusMenuItem.Text = headphones ? "Current output: Headphones" : "Current output: Speakers";
+                _trayIcon.Text = (headphones ? "Headphones" : "Speakers") + " – " +
                     FormatHotkey(_hotkeyModifiers, _hotkeyVirtualKey);
                 UpdateTrayOutputIcon((int)selectedOutput);
             }
             catch (Exception ex)
             {
-                _statusMenuItem.Text = "Ausgangsstatus nicht verfügbar";
-                _trayIcon.Text = "Ausgangsstatus nicht verfügbar";
+                _statusMenuItem.Text = "Output status unavailable";
+                _trayIcon.Text = "Output status unavailable";
                 UpdateTrayOutputIcon(-1);
-                Log("Tray-Status konnte nicht gelesen werden: " + ex);
+                Log("Could not read tray status: " + ex);
             }
         }
 
@@ -248,9 +248,9 @@ namespace HeadphoneHotkey
                 {
                     bool restored = RegisterHotKey(IntPtr.Zero, HotkeyId,
                         oldModifiers | ModNoRepeat, oldVirtualKey);
-                    ShowTrayMessage("Hotkey nicht geändert",
-                        "Diese Tastenkombination ist bereits belegt." +
-                        (restored ? " Der bisherige Hotkey bleibt aktiv." : " Der bisherige Hotkey konnte nicht wiederhergestellt werden."),
+                    ShowTrayMessage("Hotkey not changed",
+                        "This key combination is already in use." +
+                        (restored ? " The previous hotkey is still active." : " The previous hotkey could not be restored."),
                         ToolTipIcon.Warning);
                     return;
                 }
@@ -259,7 +259,7 @@ namespace HeadphoneHotkey
                 _hotkeyVirtualKey = dialog.HotkeyVirtualKey;
                 SaveHotkeySettings();
                 RefreshTrayStatus();
-                ShowTrayMessage("Hotkey geändert", FormatHotkey(_hotkeyModifiers, _hotkeyVirtualKey), ToolTipIcon.Info);
+                ShowTrayMessage("Hotkey changed", FormatHotkey(_hotkeyModifiers, _hotkeyVirtualKey), ToolTipIcon.Info);
             }
         }
 
@@ -287,7 +287,7 @@ namespace HeadphoneHotkey
             }
             catch (Exception ex)
             {
-                Log("Hotkey-Einstellungen konnten nicht geladen werden: " + ex);
+                Log("Could not load hotkey settings: " + ex);
             }
         }
 
@@ -303,9 +303,9 @@ namespace HeadphoneHotkey
             }
             catch (Exception ex)
             {
-                Log("Hotkey-Einstellungen konnten nicht gespeichert werden: " + ex);
-                ShowTrayMessage("Einstellung nicht gespeichert",
-                    "Der Hotkey gilt bis zum Beenden, konnte aber nicht dauerhaft gespeichert werden.",
+                Log("Could not save hotkey settings: " + ex);
+                ShowTrayMessage("Settings not saved",
+                    "The hotkey will work until the app exits, but could not be saved permanently.",
                     ToolTipIcon.Warning);
             }
         }
@@ -319,9 +319,9 @@ namespace HeadphoneHotkey
         internal static string FormatHotkey(uint modifiers, uint virtualKey)
         {
             List<string> parts = new List<string>();
-            if ((modifiers & ModControl) != 0) parts.Add("Strg");
+            if ((modifiers & ModControl) != 0) parts.Add("Ctrl");
             if ((modifiers & ModAlt) != 0) parts.Add("Alt");
-            if ((modifiers & ModShift) != 0) parts.Add("Umschalt");
+            if ((modifiers & ModShift) != 0) parts.Add("Shift");
             parts.Add(((Keys)virtualKey).ToString());
             return string.Join("+", parts.ToArray());
         }
@@ -399,7 +399,7 @@ namespace HeadphoneHotkey
             EndpointInfo endpoint = FindSoundCoreRenderEndpoint();
             object instance = Activator.CreateInstance(Type.GetTypeFromCLSID(endpoint.SoundCoreClsid, true));
             if (instance == null)
-                throw new InvalidOperationException("Creative SoundCore konnte nicht initialisiert werden.");
+                throw new InvalidOperationException("Could not initialize Creative SoundCore.");
 
             try
             {
@@ -414,7 +414,7 @@ namespace HeadphoneHotkey
                 _stParamValue value;
                 soundCore.GetParamValue(parameter, out value);
                 if (value.paramType != _etParamType.eParamType_Dword || value.paramVal.dwordVal > 1)
-                    throw new InvalidOperationException("Der Treiber lieferte einen unbekannten SelectOutput-Zustand.");
+                    throw new InvalidOperationException("The driver returned an unknown SelectOutput state.");
                 return value.paramVal.dwordVal;
             }
             finally
@@ -433,9 +433,9 @@ namespace HeadphoneHotkey
             }
             catch (Exception ex)
             {
-                Log("Creative-Ausgangszustand konnte nicht gelesen werden: " + ex);
+                Log("Could not read Creative output state: " + ex);
                 if (showErrors)
-                    ShowTrayMessage("Ausgangsstatus nicht verfügbar", ex.Message, ToolTipIcon.Error);
+                    ShowTrayMessage("Output status unavailable", ex.Message, ToolTipIcon.Error);
                 return false;
             }
 
@@ -462,7 +462,7 @@ namespace HeadphoneHotkey
                 Type soundCoreType = Type.GetTypeFromCLSID(endpoint.SoundCoreClsid, true);
                 object instance = Activator.CreateInstance(soundCoreType);
                 if (instance == null)
-                    throw new InvalidOperationException("Creative SoundCore konnte nicht initialisiert werden.");
+                    throw new InvalidOperationException("Could not initialize Creative SoundCore.");
 
                 try
                 {
@@ -482,10 +482,10 @@ namespace HeadphoneHotkey
 
                     soundCore.SetParamValue(parameter, newValue);
                     Log(string.Format(
-                        "Creative SelectOutput erfolgreich: Endpoint=\"{0}\" ({1}), {2} -> {3}.",
+                        "Creative SelectOutput succeeded: Endpoint=\"{0}\" ({1}), {2} -> {3}.",
                         endpoint.FriendlyName, endpoint.Id,
-                        oldHeadphones.HasValue ? (oldHeadphones.Value ? "Kopfhörer" : "Lautsprecher") : "Zielmodus",
-                        headphones ? "Kopfhörer" : "Lautsprecher"));
+                        oldHeadphones.HasValue ? (oldHeadphones.Value ? "Headphones" : "Speakers") : "target mode",
+                        headphones ? "Headphones" : "Speakers"));
                     RefreshTrayStatus();
                     return true;
                 }
@@ -497,10 +497,10 @@ namespace HeadphoneHotkey
             }
             catch (Exception ex)
             {
-                Log("Umschalten fehlgeschlagen: " + ex);
+                Log("Output switch failed: " + ex);
                 if (showErrors)
-                    ShowTrayMessage("Umschalten fehlgeschlagen",
-                        "Details stehen in %LOCALAPPDATA%\\HeadphoneHotkey\\HeadphoneHotkey.log. " + ex.Message,
+                    ShowTrayMessage("Output switch failed",
+                        "See %LOCALAPPDATA%\\HeadphoneHotkey\\HeadphoneHotkey.log for details. " + ex.Message,
                         ToolTipIcon.Error);
                 return false;
             }
@@ -510,7 +510,7 @@ namespace HeadphoneHotkey
         {
             ushort[] endpointChars = endpointId.Select(delegate(char ch) { return (ushort)ch; }).ToArray();
             if (endpointChars.Length >= 260)
-                throw new InvalidOperationException("Die Windows-Audioendpunkt-ID ist unerwartet lang.");
+                throw new InvalidOperationException("The Windows audio endpoint ID is unexpectedly long.");
 
             ushort[] fixedEndpointId = new ushort[260];
             Array.Copy(endpointChars, fixedEndpointId, endpointChars.Length);
@@ -533,10 +533,10 @@ namespace HeadphoneHotkey
             {
                 CheckHResult(
                     enumerator.EnumAudioEndpoints(DataFlow.Render, DeviceStateActive, out devices),
-                    "Windows-Audioendpunkte konnten nicht aufgelistet werden.");
+                    "Could not enumerate Windows audio endpoints.");
                 uint count;
                 CheckHResult(devices.GetCount(out count),
-                    "Die Anzahl der Audioendpunkte konnte nicht gelesen werden.");
+                    "Could not read the number of audio endpoints.");
 
                 List<EndpointInfo> candidates = new List<EndpointInfo>();
                 for (uint i = 0; i < count; i++)
@@ -546,12 +546,12 @@ namespace HeadphoneHotkey
                     try
                     {
                         CheckHResult(devices.Item(i, out device),
-                            "Audioendpunkt " + i + " konnte nicht geöffnet werden.");
+                            "Could not open audio endpoint " + i + ".");
                         string id;
                         CheckHResult(device.GetId(out id),
-                            "Die ID von Audioendpunkt " + i + " konnte nicht gelesen werden.");
+                            "Could not read the ID of audio endpoint " + i + ".");
                         CheckHResult(device.OpenPropertyStore(StgmRead, out store),
-                            "Die Eigenschaften von Audioendpunkt " + i + " konnten nicht gelesen werden.");
+                            "Could not read the properties of audio endpoint " + i + ".");
 
                         Guid? clsid = ReadGuidProperty(store, SoundCoreClsidKey);
                         if (!clsid.HasValue)
@@ -574,8 +574,8 @@ namespace HeadphoneHotkey
                 if (candidates.Count == 0)
                 {
                     throw new InvalidOperationException(
-                        "Kein aktiver Wiedergabeendpunkt mit Creatives SoundCore-Eigenschaft gefunden. " +
-                        "Ist der Sound-Blaster-Treiber installiert?");
+                        "No active playback endpoint with a Creative SoundCore property was found. " +
+                        "Is the Sound Blaster driver installed?");
                 }
 
                 EndpointInfo namedSoundBlaster = candidates.FirstOrDefault(
@@ -600,8 +600,8 @@ namespace HeadphoneHotkey
                     return defaultCandidate;
 
                 throw new InvalidOperationException(
-                    "Mehrere Creative-SoundCore-Wiedergabeendpunkte gefunden, aber keiner heißt " +
-                    "„Sound Blaster Z“ oder ist der Windows-Standardausgang. Es wurde nichts umgeschaltet.");
+                    "Multiple Creative SoundCore playback endpoints were found, but none is named " +
+                    "\"Sound Blaster Z\" or is the Windows default output. Nothing was switched.");
             }
             finally
             {
@@ -617,10 +617,10 @@ namespace HeadphoneHotkey
             {
                 CheckHResult(
                     enumerator.GetDefaultAudioEndpoint(DataFlow.Render, Role.Multimedia, out device),
-                    "Der Windows-Standard-Wiedergabeendpunkt konnte nicht ermittelt werden.");
+                    "Could not determine the Windows default playback endpoint.");
                 string id;
                 CheckHResult(device.GetId(out id),
-                    "Die ID des Windows-Standardausgangs konnte nicht gelesen werden.");
+                    "Could not read the ID of the Windows default output.");
                 return id;
             }
             finally
@@ -633,7 +633,7 @@ namespace HeadphoneHotkey
         {
             PropVariant value;
             CheckHResult(store.GetValue(ref key, out value),
-                "Property " + key.FormatId + "/" + key.PropertyId + " konnte nicht gelesen werden.");
+                "Could not read property " + key.FormatId + "/" + key.PropertyId + ".");
             try
             {
                 if (value.VariantType == 72 && value.Pointer != IntPtr.Zero)
@@ -655,7 +655,7 @@ namespace HeadphoneHotkey
         {
             PropVariant value;
             CheckHResult(store.GetValue(ref key, out value),
-                "Property " + key.FormatId + "/" + key.PropertyId + " konnte nicht gelesen werden.");
+                "Could not read property " + key.FormatId + "/" + key.PropertyId + ".");
             try
             {
                 return ReadVariantString(value);
@@ -918,7 +918,7 @@ namespace HeadphoneHotkey
         HotkeyModifiers = modifiers;
         HotkeyVirtualKey = virtualKey;
 
-        Text = "Umschalt-Hotkey ändern";
+        Text = "Change Toggle Hotkey";
         FormBorderStyle = FormBorderStyle.FixedDialog;
         StartPosition = FormStartPosition.CenterScreen;
         MinimizeBox = false;
@@ -930,7 +930,7 @@ namespace HeadphoneHotkey
         {
             AutoSize = true,
             Location = new Point(12, 12),
-            Text = "Klicken Sie ins Feld und drücken Sie die gewünschte Tastenkombination:"
+            Text = "Click the field and press the desired key combination:"
         };
         Controls.Add(prompt);
 
@@ -949,7 +949,7 @@ namespace HeadphoneHotkey
         {
             AutoSize = true,
             Location = new Point(12, 70),
-            Text = "Mindestens eine Umschalttaste (Strg, Alt oder Umschalt) ist erforderlich."
+            Text = "At least one modifier key (Ctrl, Alt, or Shift) is required."
         };
         Controls.Add(_hint);
 
@@ -963,8 +963,8 @@ namespace HeadphoneHotkey
         {
             if (!_validHotkey)
             {
-                MessageBox.Show(this, "Bitte wählen Sie eine gültige Tastenkombination mit Strg, Alt oder Umschalt.",
-                    "Umschalt-Hotkey", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                MessageBox.Show(this, "Please choose a valid key combination with Ctrl, Alt, or Shift.",
+                    "Toggle Hotkey", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
             DialogResult = DialogResult.OK;
@@ -977,7 +977,7 @@ namespace HeadphoneHotkey
         {
             Location = new Point(297, 108),
             Size = new Size(75, 27),
-            Text = "Abbrechen",
+            Text = "Cancel",
             DialogResult = DialogResult.Cancel
         };
         Controls.Add(cancelButton);
@@ -1004,7 +1004,7 @@ namespace HeadphoneHotkey
         if (modifiers == 0)
         {
             _validHotkey = false;
-            _hint.Text = "Bitte halten Sie zusätzlich Strg, Alt oder Umschalt gedrückt.";
+            _hint.Text = "Please also hold Ctrl, Alt, or Shift.";
             return;
         }
 
@@ -1012,7 +1012,7 @@ namespace HeadphoneHotkey
         HotkeyVirtualKey = (uint)key;
         _validHotkey = true;
         _hotkeyBox.Text = Program.FormatHotkey(HotkeyModifiers, HotkeyVirtualKey);
-        _hint.Text = "Neue Kombination: " + _hotkeyBox.Text;
+        _hint.Text = "New combination: " + _hotkeyBox.Text;
     }
     }
 }
