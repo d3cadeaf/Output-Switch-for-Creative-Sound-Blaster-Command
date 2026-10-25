@@ -1,0 +1,16 @@
+# Build output and local distribution package. These contain Creative's third-party interop assembly.
+**/bin/Release/
+Paket/
+*Paket.zip
+Interop.CtSndCr.dll
+
+# Build and IDE output
+**/obj/
+**/bin/Debug/
+**/bin/Release/*.pdb
+**/bin/Release/*.xml
+.vs/
+
+# Local diagnostics and user settings
+*.log
+settings.ini
